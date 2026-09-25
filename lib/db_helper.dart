@@ -14,18 +14,28 @@ class DbHelper {
         var sheet = excel.tables[table];
         if (sheet == null) continue;
 
+        // تێپەڕاندنی خشتەی سەری ستوونەکان (Row 0)
         for (var row in sheet.rows.skip(1)) {
           if (row.isEmpty) continue;
           
-          var name = row[0]?.value?.toString() ?? '';
-          var price = double.tryParse(row[1]?.value?.toString() ?? '0') ?? 0.0;
-          var stock = int.tryParse(row[2]?.value?.toString() ?? '0') ?? 0;
+          var name = row[0]?.value?.toString() ?? ''; // ناوی کاڵا (ستوونی A)
+          var buyPrice = double.tryParse(row[1]?.value?.toString() ?? '0') ?? 0.0; // نرخی کڕین (ستوونی B)
+          var sellPrice = double.tryParse(row[2]?.value?.toString() ?? '0') ?? 0.0; // نرخی فرۆشتن (ستوونی C)
+          var soldCount = int.tryParse(row[3]?.value?.toString() ?? '0') ?? 0; // عدد فرۆشراو (ستوونی D)
 
           if (name.isNotEmpty) {
+            double totalSales = soldCount * sellPrice;
+            double totalProfit = soldCount * (sellPrice - buyPrice);
+            double capital = soldCount * buyPrice;
+
             productList.add({
               'name': name,
-              'price': price,
-              'stock': stock,
+              'buyPrice': buyPrice,
+              'price': sellPrice, // نرخی فرۆشتن
+              'soldCount': soldCount,
+              'totalSales': totalSales,
+              'totalProfit': totalProfit,
+              'capital': capital,
               'barcode': '100${productList.length + 1}',
             });
           }
