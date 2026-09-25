@@ -1,6 +1,7 @@
 name: crystal_pos
 description: "A new Flutter project for Crystal POS."
 publish_to: 'none'
+
 version: 1.0.0+1
 
 environment:
@@ -9,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   sqflite: ^2.3.2
   path: ^1.9.0
   mobile_scanner: ^5.1.1
@@ -17,6 +19,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
   flutter_lints: ^3.0.0
 
 flutter:
