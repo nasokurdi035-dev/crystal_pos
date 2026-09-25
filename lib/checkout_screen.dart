@@ -20,7 +20,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
 
     if (scannedCode != null && scannedCode is String) {
-      final products = await DBHelper.getProducts();
+      // لێرەدا مێتۆدی ڕاستەوخۆی ئێکسڵ بانگ دەکەین
+      final products = await DbHelper.loadProductsFromExcel();
       final item = products.firstWhere(
         (p) => p['barcode'] == scannedCode,
         orElse: () => {},
@@ -67,7 +68,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: _cartItems.isEmpty
                 ? const Center(
                     child: Text(
-                      'سەبەتەکە بەتاڵە!\nدۆگمەی سکان داگرە بۆ زیادکردنی کالا',
+                      'سەبەتەکە بەتاڵە!\nدوگمەی سکان داگرە بۆ زیادکردنی کاڵا',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
@@ -113,7 +114,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _scanAndAddItem,
-        label: const Text('سکانکردنی کالا'),
+        label: const Text('سکانکردنی کاڵا'),
         icon: const Icon(Icons.qr_code_scanner),
         backgroundColor: Colors.green,
       ),
