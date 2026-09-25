@@ -34,11 +34,16 @@ jobs:
         run: |
           cp /tmp/backup/main.dart lib/main.dart
 
+      - name: Fix minSdk version
+        run: |
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle || true
+          sed -i 's/minSdkVersion = flutter.minSdkVersion/minSdkVersion = 21/g' android/app/build.gradle || true
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --verbose
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
