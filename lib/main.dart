@@ -25,7 +25,6 @@ class CrystalPOSApp extends StatelessWidget {
   }
 }
 
-// Database Helper
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
@@ -42,7 +41,11 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createDB,
+    );
   }
 
   Future _createDB(Database db, int version) async {
@@ -79,11 +82,20 @@ class DatabaseHelper {
 
   Future<int> deleteProduct(int id) async {
     final db = await instance.database;
-    return await db.delete('products', where: 'id = ?', whereArgs: [id]);
+    return await db.delete(
+      'products',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
-  Future<int> recordSale(String name, double price, int qty) async {
+  Future<int> recordSale(
+    String name,
+    double price,
+    int qty,
+  ) async {
     final db = await instance.database;
+
     return await db.insert('sales', {
       'productName': name,
       'price': price,
@@ -120,18 +132,28 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+        },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.point_of_sale), label: 'فرۆشتن (POS)'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory), label: 'کاڵاکان'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'ئامار و ڕاپۆرت'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.point_of_sale),
+            label: 'فرۆشتن (POS)',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.inventory),
+            label: 'کاڵاکان',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: 'ئامار و ڕاپۆرت',
+          ),
         ],
       ),
     );
   }
 }
 
-// 1. POS Screen
 class PosScreen extends StatefulWidget {
   const PosScreen({super.key});
 
@@ -151,47 +173,75 @@ class _PosScreenState extends State<PosScreen> {
 
   void _loadProducts() async {
     final data = await DatabaseHelper.instance.getProducts();
-    setState(() => _products = data);
+
+    if (!mounted) return;
+
+    setState(() {
+      _products = data;
+    });
   }
 
   void _addToCart(Map<String, dynamic> product) {
     setState(() {
-      final index = _cart.indexWhere((item) => item['id'] == product['id']);
+      final index = _cart.indexWhere(
+        (item) => item['id'] == product['id'],
+      );
+
       if (index >= 0) {
         _cart[index]['cartQty'] += 1;
       } else {
-        _cart.add({...product, 'cartQty': 1});
+        _cart.add({
+          ...product,
+          'cartQty': 1,
+        });
       }
     });
   }
 
   double get _totalAmount {
     double total = 0;
-    for (var item in _cart) {
-      total += (item['price'] as double) * (item['cartQty'] as int);
+
+    for (final item in _cart) {
+      total +=
+          (item['price'] as double) * (item['cartQty'] as int);
     }
+
     return total;
   }
 
   void _checkout() async {
     if (_cart.isEmpty) return;
-    for (var item in _cart) {
+
+    for (final item in _cart) {
       await DatabaseHelper.instance.recordSale(
         item['name'],
         item['price'],
         item['cartQty'],
       );
     }
-    setState(() => _cart.clear());
+
+    setState(() {
+      _cart.clear();
+    });
+
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('فرۆشتنەکە بە سەرکەوتوویی تۆمار کرا!')),
+      const SnackBar(
+        content: Text(
+          'فرۆشتنەکە بە سەرکەوتوویی تۆمار کرا!',
+        ),
+      ),
     );
   }
 
   void _scanBarcode() async {
     final scannedCode = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const BarcodeScannerScreen()),
+      MaterialPageRoute(
+        builder: (context) =>
+            const BarcodeScannerScreen(),
+      ),
     );
 
     if (scannedCode != null) {
@@ -203,8 +253,14 @@ class _PosScreenState extends State<PosScreen> {
       if (matchedProduct.isNotEmpty) {
         _addToCart(matchedProduct);
       } else {
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('کاڵا نەدۆزرایەوە بە بارکۆدی: $scannedCode')),
+          SnackBar(
+            content: Text(
+              'کاڵا نەدۆزرایەوە بە بارکۆدی: $scannedCode',
+            ),
+          ),
         );
       }
     }
@@ -229,13 +285,20 @@ class _PosScreenState extends State<PosScreen> {
               itemCount: _products.length,
               itemBuilder: (context, index) {
                 final product = _products[index];
+
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   child: ListTile(
                     title: Text(product['name']),
-                    subtitle: Text('نرخ: \$${product['price']} | بارکۆد: ${product['barcode']}'),
+                    subtitle: Text(
+                      'نرخ: \$${product['price']} | بارکۆد: ${product['barcode']}',
+                    ),
                     trailing: ElevatedButton(
-                      onPressed: () => _addToCart(product),
+                      onPressed: () =>
+                          _addToCart(product),
                       child: const Text('زیادکردن'),
                     ),
                   ),
@@ -248,30 +311,50 @@ class _PosScreenState extends State<PosScreen> {
             color: Colors.grey[200],
             child: Column(
               children: [
-                const Text('سەبەتەی کڕین', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text(
+                  'سەبەتەی کڕین',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
                 SizedBox(
                   height: 100,
                   child: ListView.builder(
                     itemCount: _cart.length,
                     itemBuilder: (context, index) {
                       final item = _cart[index];
+
                       return ListTile(
                         title: Text(item['name']),
-                        trailing: Text('${item['cartQty']} دانە - \$${item['price'] * item['cartQty']}'),
+                        trailing: Text(
+                          '${item['cartQty']} دانە - \$${item['price'] * item['cartQty']}',
+                        ),
                       );
                     },
                   ),
                 ),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('کۆی گشتی: \$${_totalAmount.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(
+                      'کۆی گشتی: \$${_totalAmount.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
                       onPressed: _checkout,
                       icon: const Icon(Icons.check),
-                      label: const Text('فرۆشتن تەواو بکە'),
+                      label: const Text(
+                        'فرۆشتن تەواو بکە',
+                      ),
                     ),
                   ],
                 ),
@@ -284,20 +367,26 @@ class _PosScreenState extends State<PosScreen> {
   }
 }
 
-// Barcode Scanner Screen
 class BarcodeScannerScreen extends StatelessWidget {
   const BarcodeScannerScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('سکانکردنی بارکۆد')),
+      appBar: AppBar(
+        title: const Text('سکانکردنی بارکۆد'),
+      ),
       body: MobileScanner(
         onDetect: (capture) {
-          final List<Barcode> barcodes = capture.barcodes;
+          final List<Barcode> barcodes =
+              capture.barcodes;
+
           for (final barcode in barcodes) {
             if (barcode.rawValue != null) {
-              Navigator.pop(context, barcode.rawValue);
+              Navigator.pop(
+                context,
+                barcode.rawValue,
+              );
               break;
             }
           }
@@ -307,20 +396,29 @@ class BarcodeScannerScreen extends StatelessWidget {
   }
 }
 
-// 2. Products Screen (Add/Manage Products)
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
 
   @override
-  State<ProductsScreen> createState() => _ProductsScreenState();
+  State<ProductsScreen> createState() =>
+      _ProductsScreenState();
 }
 
-class _ProductsScreenState extends State<ProductsScreen> {
+class _ProductsScreenState
+    extends State<ProductsScreen> {
   List<Map<String, dynamic>> _products = [];
-  final _nameController = TextEditingController();
-  final _barcodeController = TextEditingController();
-  final _priceController = TextEditingController();
-  final _qtyController = TextEditingController();
+
+  final _nameController =
+      TextEditingController();
+
+  final _barcodeController =
+      TextEditingController();
+
+  final _priceController =
+      TextEditingController();
+
+  final _qtyController =
+      TextEditingController();
 
   @override
   void initState() {
@@ -329,18 +427,36 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   void _refreshProducts() async {
-    final data = await DatabaseHelper.instance.getProducts();
-    setState(() => _products = data);
+    final data =
+        await DatabaseHelper.instance.getProducts();
+
+    if (!mounted) return;
+
+    setState(() {
+      _products = data;
+    });
   }
 
   void _addProduct() async {
-    if (_nameController.text.isEmpty || _priceController.text.isEmpty) return;
+    if (_nameController.text.isEmpty ||
+        _priceController.text.isEmpty) {
+      return;
+    }
+
+    final price =
+        double.tryParse(_priceController.text);
+
+    if (price == null) return;
 
     await DatabaseHelper.instance.insertProduct({
       'name': _nameController.text,
-      'barcode': _barcodeController.text.isEmpty ? '0000' : _barcodeController.text,
-      'price': double.parse(_priceController.text),
-      'quantity': int.tryParse(_qtyController.text) ?? 1,
+      'barcode':
+          _barcodeController.text.isEmpty
+              ? '0000'
+              : _barcodeController.text,
+      'price': price,
+      'quantity':
+          int.tryParse(_qtyController.text) ?? 1,
     });
 
     _nameController.clear();
@@ -349,6 +465,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
     _qtyController.clear();
 
     _refreshProducts();
+
+    if (!mounted) return;
+
     Navigator.pop(context);
   }
 
@@ -356,21 +475,63 @@ class _ProductsScreenState extends State<ProductsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('زیادکردنی کاڵای نوێ'),
+        title: const Text(
+          'زیادکردنی کاڵای نوێ',
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'ناوی کاڵا')),
-              TextField(controller: _barcodeController, decoration: const InputDecoration(labelText: 'بارکۆد')),
-              TextField(controller: _priceController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'نرخ')),
-              TextField(controller: _qtyController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'بڕ (دانە)')),
+              TextField(
+                controller: _nameController,
+                decoration:
+                    const InputDecoration(
+                  labelText: 'ناوی کاڵا',
+                ),
+              ),
+              TextField(
+                controller:
+                    _barcodeController,
+                decoration:
+                    const InputDecoration(
+                  labelText: 'بارکۆد',
+                ),
+              ),
+              TextField(
+                controller: _priceController,
+                keyboardType:
+                    TextInputType.number,
+                decoration:
+                    const InputDecoration(
+                  labelText: 'نرخ',
+                ),
+              ),
+              TextField(
+                controller: _qtyController,
+                keyboardType:
+                    TextInputType.number,
+                decoration:
+                    const InputDecoration(
+                  labelText: 'بڕ (دانە)',
+                ),
+              ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('پاشگەزبوونەوە')),
-          ElevatedButton(onPressed: _addProduct, child: const Text('پاشەکەوتکردن')),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context),
+            child: const Text(
+              'پاشگەزبوونەوە',
+            ),
+          ),
+          ElevatedButton(
+            onPressed: _addProduct,
+            child: const Text(
+              'پاشەکەوتکردن',
+            ),
+          ),
         ],
       ),
     );
@@ -379,41 +540,65 @@ class _ProductsScreenState extends State<ProductsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('بەڕێوەبردنی کاڵاکان')),
+      appBar: AppBar(
+        title: const Text(
+          'بەڕێوەبردنی کاڵاکان',
+        ),
+      ),
       body: ListView.builder(
         itemCount: _products.length,
         itemBuilder: (context, index) {
           final product = _products[index];
+
           return ListTile(
             title: Text(product['name']),
-            subtitle: Text('نرخ: \$${product['price']} | بڕ: ${product['quantity']}'),
+            subtitle: Text(
+              'نرخ: \$${product['price']} | بڕ: ${product['quantity']}',
+            ),
             trailing: IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
+              icon: const Icon(
+                Icons.delete,
+                color: Colors.red,
+              ),
               onPressed: () async {
-                await DatabaseHelper.instance.deleteProduct(product['id']);
+                await DatabaseHelper.instance
+                    .deleteProduct(product['id']);
+
                 _refreshProducts();
               },
             ),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddProductDialog,
+      floatingActionButton:
+          FloatingActionButton(
+        onPressed:
+            _showAddProductDialog,
         child: const Icon(Icons.add),
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _barcodeController.dispose();
+    _priceController.dispose();
+    _qtyController.dispose();
+    super.dispose();
+  }
 }
 
-// 3. Reports & Monthly Reset Screen
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
 
   @override
-  State<ReportsScreen> createState() => _ReportsScreenState();
+  State<ReportsScreen> createState() =>
+      _ReportsScreenState();
 }
 
-class _ReportsScreenState extends State<ReportsScreen> {
+class _ReportsScreenState
+    extends State<ReportsScreen> {
   List<Map<String, dynamic>> _sales = [];
 
   @override
@@ -423,30 +608,65 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   void _loadSales() async {
-    final db = await DatabaseHelper.instance.database;
-    final sales = await db.query('sales', orderBy: 'id DESC');
-    setState(() => _sales = sales);
+    final db =
+        await DatabaseHelper.instance.database;
+
+    final sales = await db.query(
+      'sales',
+      orderBy: 'id DESC',
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _sales = sales;
+    });
   }
 
   void _monthlyResetDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('سفرکردنەوەی مانگانە'),
-        content: const Text('ئایا دڵنیای لە سفربوونەوەی سەرجەم ئامار و فرۆشتنەکان؟'),
+        title: const Text(
+          'سفرکردنەوەی مانگانە',
+        ),
+        content: const Text(
+          'ئایا دڵنیای لە سفرکردنەوەی سەرجەم ئامار و فرۆشتنەکان؟',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('نەخێر')),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context),
+            child: const Text('نەخێر'),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style:
+                ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () async {
-              await DatabaseHelper.instance.monthlyReset();
+              await DatabaseHelper.instance
+                  .monthlyReset();
+
               _loadSales();
+
+              if (!mounted) return;
+
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('مانگەکە بە سەرکەوتوویی سفربووەوە!')),
+
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'مانگەکە بە سەرکەوتوویی سفربووەوە!',
+                  ),
+                ),
               );
             },
-            child: const Text('بەڵێ، سفرکردنەوە'),
+            child: const Text(
+              'بەڵێ، سفرکردنەوە',
+            ),
           ),
         ],
       ),
@@ -455,44 +675,88 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double totalRevenue = _sales.fold(0, (sum, item) => sum + ((item['price'] as double) * (item['quantity'] as int)));
+    double totalRevenue = _sales.fold(
+      0,
+      (sum, item) =>
+          sum +
+          ((item['price'] as num).toDouble() *
+              (item['quantity'] as int)),
+    );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('ئامار و ڕاپۆرتی فرۆشتن')),
+      appBar: AppBar(
+        title: const Text(
+          'ئامار و ڕاپۆرتی فرۆشتن',
+        ),
+      ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Card(
               color: Colors.indigo.shade50,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding:
+                    const EdgeInsets.all(16),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment:
+                      MainAxisAlignment
+                          .spaceBetween,
                   children: [
-                    const Text('کۆی داهاتی گشتی:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text('\$${totalRevenue.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, color: Colors.indigo, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'کۆی داهاتی گشتی:',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '\$${totalRevenue.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color:
+                            Colors.indigo,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
           ),
           ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            onPressed: _monthlyResetDialog,
+            style:
+                ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed:
+                _monthlyResetDialog,
             icon: const Icon(Icons.refresh),
-            label: const Text('دوگمەی سفرکردنەوەی مانگانە'),
+            label: const Text(
+              'دوگمەی سفرکردنەوەی مانگانە',
+            ),
           ),
           const Divider(),
           Expanded(
             child: ListView.builder(
               itemCount: _sales.length,
-              itemBuilder: (context, index) {
+              itemBuilder:
+                  (context, index) {
                 final sale = _sales[index];
+
                 return ListTile(
-                  title: Text(sale['productName']),
-                  subtitle: Text('بەروار: ${sale['date'].substring(0, 10)}'),
-                  trailing: Text('${sale['quantity']} دانە - \$${(sale['price'] as double) * (sale['quantity'] as int)}'),
+                  title: Text(
+                    sale['productName'],
+                  ),
+                  subtitle: Text(
+                    'بەروار: ${sale['date'].toString().substring(0, 10)}',
+                  ),
+                  trailing: Text(
+                    '${sale['quantity']} دانە - \$${(sale['price'] as num).toDouble() * (sale['quantity'] as int)}',
+                  ),
                 );
               },
             ),
