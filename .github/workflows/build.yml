@@ -21,8 +21,10 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Generate Android files
-        run: flutter create . --platforms=android
+      - name: Enable Android platform
+        run: |
+          flutter config --enable-android
+          flutter create . --org com.example --project-name crystal_pos --platforms=android --overwrite
 
       - name: Install dependencies
         run: flutter pub get
