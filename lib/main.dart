@@ -33,6 +33,7 @@ class POSHomeScreen extends StatefulWidget {
 
 class _POSHomeScreenState extends State<POSHomeScreen> {
   List<Map<String, dynamic>> _products = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -41,11 +42,16 @@ class _POSHomeScreenState extends State<POSHomeScreen> {
   }
 
   void _refreshProducts() async {
-  final data = await DbHelper.loadProductsFromExcel();
-  setState(() {
-    _products = data;
-  });
-}
+    setState(() {
+      _isLoading = true;
+    });
+    final data = await DbHelper.loadProductsFromExcel();
+    setState(() {
+      _products = data;
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,45 +63,48 @@ class _POSHomeScreenState extends State<POSHomeScreen> {
           IconButton(
             icon: const Icon(Icons.point_of_sale, size: 28),
             tooltip: 'کاشێر / فرۆشتن',
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const CheckoutScreen()),
               );
+              _refreshProducts(); // دوای گەڕانەوە لە کاشێر داتاکان نوێ دەکەینەوە
             },
           ),
         ],
-       ),
-      body: _products.isEmpty
-          ? const Center(
-              child: Text(
-                'هیچ کالایەک تۆمار نەکراوە!\nدوگمەی (+) داگرە بۆ زیادکردن',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-            )
-          : ListView.builder(
-              itemCount: _products.length,
-              itemBuilder: (context, index) {
-                final item = _products[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  child: ListTile(
-                    leading: const Icon(Icons.diamond, color: Colors.blueAccent),
-                    title: Text(item['name'] ?? ''),
-                    subtitle: Text('بارکۆد: ${item['barcode']} | عەمبار: ${item['stock']}'),
-                    trailing: Text(
-                      '\$${item['price']}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.green,
-                      ),
-                    ),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _products.isEmpty
+              ? const Center(
+                  child: Text(
+                    'هیچ کالایەک نەدۆزرایەوە!\nتکایە دڵنیابە فایلی ئێکسڵ لە جێگەی خۆیدایە',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
-                );
-              },
-            ),
+                )
+              : ListView.builder(
+                  itemCount: _products.length,
+                  itemBuilder: (context, index) {
+                    final item = _products[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      child: ListTile(
+                        leading: const Icon(Icons.diamond, color: Colors.blueAccent),
+                        title: Text(item['name'] ?? ''),
+                        subtitle: Text('نرخی کڕین: \$${item['buyPrice']} | فرۆشراو: ${item['soldCount']}'),
+                        trailing: Text(
+                          '\$${item['price']}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.push(
@@ -109,4 +118,4 @@ class _POSHomeScreenState extends State<POSHomeScreen> {
       ),
     );
   }
-} 
+}
