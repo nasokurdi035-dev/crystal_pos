@@ -21,11 +21,24 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: Backup main.dart
+        run: |
+          mkdir -p /tmp/backup
+          cp lib/main.dart /tmp/backup/main.dart
+
+      - name: Generate Android files
+        run: |
+          flutter create . --org com.example --project-name crystal_pos --platforms=android --overwrite
+
+      - name: Restore main.dart
+        run: |
+          cp /tmp/backup/main.dart lib/main.dart
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release --no-pub
+        run: flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
