@@ -2,14 +2,18 @@ name: Build Flutter APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
+      
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -17,11 +21,8 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.x'
-          channel: 'stable'
+      - name: Generate Android files
+        run: flutter create . --platforms=android
 
       - name: Install dependencies
         run: flutter pub get
