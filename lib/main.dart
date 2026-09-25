@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'db_helper.dart';
-import 'add_product.dart';
 import 'checkout_screen.dart';
 
 void main() {
@@ -38,10 +37,10 @@ class _POSHomeScreenState extends State<POSHomeScreen> {
   @override
   void initState() {
     super.initState();
-    _refreshProducts();
+    _loadData();
   }
 
-  void _refreshProducts() async {
+  void _loadData() async {
     setState(() {
       _isLoading = true;
     });
@@ -62,14 +61,18 @@ class _POSHomeScreenState extends State<POSHomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.point_of_sale, size: 28),
-            tooltip: 'کاشێر / فرۆشتن',
+            tooltip: 'کاشێر و فرۆشتن',
             onPressed: () async {
               await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const CheckoutScreen()),
               );
-              _refreshProducts(); // دوای گەڕانەوە لە کاشێر داتاکان نوێ دەکەینەوە
+              _loadData(); // نوێکردنەوەی داتاکان دوای گەڕانەوە لە کاشێر
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
           ),
         ],
       ),
@@ -78,7 +81,7 @@ class _POSHomeScreenState extends State<POSHomeScreen> {
           : _products.isEmpty
               ? const Center(
                   child: Text(
-                    'هیچ کالایەک نەدۆزرایەوە!\nتکایە دڵنیابە فایلی ئێکسڵ لە جێگەی خۆیدایە',
+                    'هیچ کالایەک نەدۆزرایەوە!\nدڵنیابە فایلی ئێکسڵ لە جێگەی خۆیدایە',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
@@ -105,17 +108,6 @@ class _POSHomeScreenState extends State<POSHomeScreen> {
                     );
                   },
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddProductScreen()),
-          );
-          _refreshProducts();
-        },
-        backgroundColor: Colors.blueAccent,
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
