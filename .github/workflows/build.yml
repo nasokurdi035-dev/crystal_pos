@@ -21,9 +21,6 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Create Android Platform
-        run: flutter create . --org com.example --project-name crystal_pos --platforms=android
-
       - name: Install dependencies
         run: flutter pub get
 
