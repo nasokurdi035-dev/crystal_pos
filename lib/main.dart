@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+final path = p.join(dbPath, filePath);
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 void main() async {
